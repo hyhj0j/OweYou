@@ -9,9 +9,11 @@ import { createExpense, updateExpense } from '../lib/expenses'
 import { computeSplit } from '../lib/splitCalc'
 import { categoryLabel } from '../lib/categories'
 import { getErrorMessage } from '../lib/errors'
-import type { SplitType } from '../lib/db.types'
+import type { GroupMember, SplitType } from '../lib/db.types'
+import type { Ledger } from '../lib/ledger'
 import { Header } from '../components/Header'
 import { SplitSelector } from '../components/SplitSelector'
+import { AddMemberInline } from '../components/AddMemberInline'
 import { Button, ErrorText, Field, Select, Spinner, TextInput } from '../components/ui'
 
 function today(): string {
@@ -103,6 +105,13 @@ export default function AddExpense() {
   function handleModeChange(mode: SplitType) {
     setSplitType(mode)
     setCustomValues({})
+  }
+
+  function handleMemberAdded(member: GroupMember) {
+    queryClient.setQueryData<Ledger>(['ledger', groupId], (old) =>
+      old ? { ...old, members: [...old.members, member] } : old,
+    )
+    setSelectedIds((prev) => new Set(prev).add(member.id))
   }
 
   const canSubmit = description.trim() && numericAmount > 0 && paidBy && split.isValid && !submitting
@@ -202,6 +211,8 @@ export default function AddExpense() {
             ))}
           </Select>
         </Field>
+
+        <AddMemberInline groupId={groupId} onAdded={handleMemberAdded} />
 
         <div className="space-y-1.5">
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.expense.participants}</span>

@@ -94,6 +94,9 @@ export const en = {
     saveChanges: 'Save changes',
     saving: 'Saving…',
     selectAtLeastOne: 'Select at least one person.',
+    addMemberToggle: "Add someone who hasn't joined yet",
+    addMemberPlaceholder: 'Their name',
+    addMemberSubmit: 'Add',
   },
   history: {
     title: 'History',
@@ -246,6 +249,9 @@ export type Dictionary = {
     saveChanges: string
     saving: string
     selectAtLeastOne: string
+    addMemberToggle: string
+    addMemberPlaceholder: string
+    addMemberSubmit: string
   }
   history: {
     title: string
@@ -396,6 +402,9 @@ export const ko: Dictionary = {
     saveChanges: '변경사항 저장',
     saving: '저장하는 중…',
     selectAtLeastOne: '한 명 이상 선택해주세요.',
+    addMemberToggle: '아직 참여 전인 사람 추가',
+    addMemberPlaceholder: '이름',
+    addMemberSubmit: '추가',
   },
   history: {
     title: '지출 내역',
