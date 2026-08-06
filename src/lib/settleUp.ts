@@ -1,81 +1,64 @@
-export type NetBalance = { memberId: string; net: number }
 export type SettlementTransaction = { from: string; to: string; amount: number }
 
 export type BalanceInput = {
-  members: { id: string }[]
-  expenses: { paid_by: string; amount: number }[]
-  shares: { member_id: string; share_amount: number }[]
+  expenses: { id: string; paid_by: string; amount: number }[]
+  shares: { expense_id: string; member_id: string; share_amount: number }[]
   settlements: { from_member: string; to_member: string; amount: number }[]
 }
 
-/**
- * Net balance per member, in currency units (positive = owed money overall,
- * negative = owes money overall). Recomputed from scratch every time it's
- * called -- group sizes here are small enough that this is cheap.
- */
-export function computeNetBalances({ members, expenses, shares, settlements }: BalanceInput): NetBalance[] {
-  const net = new Map<string, number>()
-  for (const m of members) net.set(m.id, 0)
-
-  for (const e of expenses) {
-    net.set(e.paid_by, (net.get(e.paid_by) ?? 0) + e.amount)
-  }
-  for (const s of shares) {
-    net.set(s.member_id, (net.get(s.member_id) ?? 0) - s.share_amount)
-  }
-  for (const s of settlements) {
-    net.set(s.from_member, (net.get(s.from_member) ?? 0) + s.amount)
-    net.set(s.to_member, (net.get(s.to_member) ?? 0) - s.amount)
-  }
-
-  return [...net.entries()].map(([memberId, net]) => ({ memberId, net }))
-}
+const CENTS = 100
 
 /**
- * Greedily matches the largest debtor against the largest creditor,
- * repeatedly, until every balance is zero. This isn't guaranteed to find the
- * mathematically minimal transaction count in every case, but it never
- * produces more than members.length - 1 transactions and matches the
- * standard "settle up" behaviour users expect from apps like this.
+ * "Who owes whom", computed directly from each expense's payer and shares
+ * and netted pairwise between every two people -- not from each person's
+ * overall balance across the whole group. This keeps a debt tied to who
+ * actually fronted it: if everything you're behind on was paid by the same
+ * roommate, you pay that roommate back directly. A net-balance approach
+ * (rank everyone by total owed/owing, match largest debtor to largest
+ * creditor) can end up routing a payment through someone who never covered
+ * any of your expenses, just because their group-wide total happened to
+ * line up -- mathematically valid, but not what "who owes whom" means here.
+ *
+ * Deliberately does NOT cancel debt cycles across three or more people (A
+ * owes B, B owes C, C owes A) even when they net to zero: doing that would
+ * reduce what A owes B based on a B<->C arrangement A has no part in and
+ * never agreed to skip. Only a pair's own mutual debts, between exactly the
+ * two people who both know about them, get netted down automatically.
  *
  * Works in integer cents throughout to avoid floating-point drift.
  */
-export function simplifyDebts(balances: NetBalance[]): SettlementTransaction[] {
-  const CENTS = 100
+export function getSettlementSummary({ expenses, shares, settlements }: BalanceInput): SettlementTransaction[] {
+  const payerByExpense = new Map(expenses.map((e) => [e.id, e.paid_by]))
 
-  const debtors = balances
-    .map((b) => ({ id: b.memberId, cents: -Math.round(b.net * CENTS) }))
-    .filter((b) => b.cents > 0)
-    .sort((a, b) => b.cents - a.cents)
-
-  const creditors = balances
-    .map((b) => ({ id: b.memberId, cents: Math.round(b.net * CENTS) }))
-    .filter((b) => b.cents > 0)
-    .sort((a, b) => b.cents - a.cents)
-
-  const transactions: SettlementTransaction[] = []
-  let i = 0
-  let j = 0
-
-  while (i < debtors.length && j < creditors.length) {
-    const debtor = debtors[i]
-    const creditor = creditors[j]
-    const amountCents = Math.min(debtor.cents, creditor.cents)
-
-    if (amountCents > 0) {
-      transactions.push({ from: debtor.id, to: creditor.id, amount: amountCents / CENTS })
-    }
-
-    debtor.cents -= amountCents
-    creditor.cents -= amountCents
-    if (debtor.cents === 0) i++
-    if (creditor.cents === 0) j++
+  // owed.get(`${debtor}|${creditor}`) = cents debtor owes creditor, one-directional.
+  const owed = new Map<string, number>()
+  function add(debtor: string, creditor: string, cents: number) {
+    if (debtor === creditor || cents === 0) return
+    const key = `${debtor}|${creditor}`
+    owed.set(key, (owed.get(key) ?? 0) + cents)
   }
 
-  return transactions
-}
+  for (const s of shares) {
+    const payer = payerByExpense.get(s.expense_id)
+    if (payer === undefined) continue
+    add(s.member_id, payer, Math.round(s.share_amount * CENTS))
+  }
+  for (const s of settlements) {
+    add(s.from_member, s.to_member, -Math.round(s.amount * CENTS))
+  }
 
-/** The one function most callers need: raw ledger rows in, minimal "who owes whom" list out. */
-export function getSettlementSummary(input: BalanceInput): SettlementTransaction[] {
-  return simplifyDebts(computeNetBalances(input))
+  const memberIds = [...new Set([...owed.keys()].flatMap((key) => key.split('|')))]
+
+  const transactions: SettlementTransaction[] = []
+  for (let i = 0; i < memberIds.length; i++) {
+    for (let j = i + 1; j < memberIds.length; j++) {
+      const a = memberIds[i]
+      const b = memberIds[j]
+      const net = (owed.get(`${a}|${b}`) ?? 0) - (owed.get(`${b}|${a}`) ?? 0)
+      if (net > 0) transactions.push({ from: a, to: b, amount: net / CENTS })
+      else if (net < 0) transactions.push({ from: b, to: a, amount: -net / CENTS })
+    }
+  }
+
+  return transactions.sort((x, y) => y.amount - x.amount)
 }

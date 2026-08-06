@@ -28,16 +28,19 @@ export function BalanceSummary({
   const transactions = useMemo(
     () =>
       getSettlementSummary({
-        members: members.map((m) => ({ id: m.id })),
-        expenses: expenses.map((e) => ({ paid_by: e.paid_by, amount: Number(e.amount) })),
-        shares: shares.map((s) => ({ member_id: s.member_id, share_amount: Number(s.share_amount) })),
+        expenses: expenses.map((e) => ({ id: e.id, paid_by: e.paid_by, amount: Number(e.amount) })),
+        shares: shares.map((s) => ({
+          expense_id: s.expense_id,
+          member_id: s.member_id,
+          share_amount: Number(s.share_amount),
+        })),
         settlements: settlements.map((s) => ({
           from_member: s.from_member,
           to_member: s.to_member,
           amount: Number(s.amount),
         })),
       }),
-    [members, expenses, shares, settlements],
+    [expenses, shares, settlements],
   )
 
   if (transactions.length === 0) {
