@@ -1,0 +1,117 @@
+import { useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { useLanguage, useT, type Language } from '../i18n'
+import { useAuth } from '../hooks/useAuth'
+import { useLedger } from '../hooks/useLedger'
+import { categoryLabel, createCategory, deleteCategory } from '../lib/categories'
+import { getErrorMessage } from '../lib/errors'
+import { Header } from '../components/Header'
+import { BottomNav } from '../components/BottomNav'
+import { Button, Card, ErrorText, Select, Spinner, TextInput } from '../components/ui'
+
+export default function Settings() {
+  const t = useT()
+  const { language, setLanguage } = useLanguage()
+  const { userEmail, signOut } = useAuth()
+  const queryClient = useQueryClient()
+  const { groupId = '' } = useParams()
+  const { data: ledger, isLoading } = useLedger(groupId)
+  const [newCategory, setNewCategory] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const usedCategoryIds = new Set((ledger?.expenses ?? []).map((e) => e.category_id).filter(Boolean))
+
+  async function handleAddCategory(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newCategory.trim()) return
+    setAdding(true)
+    setError(null)
+    try {
+      await createCategory(groupId, newCategory)
+      setNewCategory('')
+      await queryClient.invalidateQueries({ queryKey: ['ledger', groupId] })
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setAdding(false)
+    }
+  }
+
+  async function handleDeleteCategory(id: string) {
+    setError(null)
+    try {
+      await deleteCategory(id)
+      await queryClient.invalidateQueries({ queryKey: ['ledger', groupId] })
+    } catch {
+      setError(t.settings.categoryInUse)
+    }
+  }
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <Header title={t.settings.title} onBack />
+      <div className="flex-1 space-y-6 px-5 py-6 pb-24">
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">{t.settings.language}</h2>
+          <Select value={language} onChange={(e) => setLanguage(e.target.value as Language)}>
+            <option value="en">English</option>
+            <option value="ko">한국어</option>
+          </Select>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">{t.settings.categories}</h2>
+          {isLoading || !ledger ? (
+            <div className="flex justify-center py-6 text-slate-400">
+              <Spinner className="h-5 w-5" />
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {ledger.categories.map((c) => (
+                <li key={c.id}>
+                  <Card className="flex items-center justify-between py-2.5">
+                    <span className="text-sm text-slate-800 dark:text-slate-200">{categoryLabel(c, t)}</span>
+                    {!usedCategoryIds.has(c.id) && (
+                      <button
+                        onClick={() => handleDeleteCategory(c.id)}
+                        className="text-xs font-medium text-red-500"
+                      >
+                        {t.settings.deleteCategory}
+                      </button>
+                    )}
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <form onSubmit={handleAddCategory} className="flex gap-2 pt-1">
+            <TextInput
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              placeholder={t.settings.categoryNamePlaceholder}
+              className="flex-1"
+            />
+            <Button type="submit" variant="secondary" disabled={adding || !newCategory.trim()}>
+              {t.settings.addCategory}
+            </Button>
+          </form>
+          <ErrorText>{error}</ErrorText>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">{t.auth.account}</h2>
+          <Card className="flex items-center justify-between py-2.5">
+            <span className="truncate text-sm text-slate-800 dark:text-slate-200">{userEmail}</span>
+            <button onClick={() => signOut()} className="shrink-0 text-xs font-medium text-red-500">
+              {t.auth.signOut}
+            </button>
+          </Card>
+        </section>
+      </div>
+      <BottomNav groupId={groupId} />
+    </div>
+  )
+}
