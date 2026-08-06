@@ -3,6 +3,7 @@ import { formatCurrency } from '../lib/currency'
 import type { SplitType } from '../lib/db.types'
 import type { GroupMember } from '../lib/db.types'
 import type { SplitResult } from '../lib/splitCalc'
+import { Avatar } from './Avatar'
 import { LabelRow, TextInput } from './ui'
 
 export function SplitSelector({
@@ -65,10 +66,14 @@ export function SplitSelector({
                   onChange={() => onToggleSelected(member.id)}
                   className="h-4 w-4"
                 />
+                <Avatar seed={member.id} kind="member" size="sm" />
                 {member.display_name}
               </LabelRow>
             ) : (
-              <span className="text-sm text-slate-700 dark:text-slate-300">{member.display_name}</span>
+              <span className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                <Avatar seed={member.id} kind="member" size="sm" />
+                {member.display_name}
+              </span>
             )}
 
             {mode === 'equal' ? (

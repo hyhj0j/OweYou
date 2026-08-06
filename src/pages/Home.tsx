@@ -6,6 +6,7 @@ import { useMyGroups } from '../hooks/useGroup'
 import { Button, Card, TextInput, Spinner } from '../components/ui'
 import { LanguageToggle } from '../components/LanguageToggle'
 import { IosInstallHint } from '../components/IosInstallHint'
+import { Avatar } from '../components/Avatar'
 
 function extractInviteCode(input: string): string {
   const trimmed = input.trim()
@@ -53,14 +54,17 @@ export default function Home() {
                 {groups.map(({ group, member }) => (
                   <li key={group.id}>
                     <Card
-                      className="flex cursor-pointer items-center justify-between"
+                      className="flex cursor-pointer items-center gap-3 justify-between"
                       onClick={() => navigate(`/g/${group.id}`)}
                     >
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-white">{group.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{member.display_name}</p>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar seed={group.id} kind="group" />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-slate-900 dark:text-white">{group.name}</p>
+                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">{member.display_name}</p>
+                        </div>
                       </div>
-                      <span className="text-xs text-slate-400">{group.currency}</span>
+                      <span className="shrink-0 text-xs text-slate-400">{group.currency}</span>
                     </Card>
                   </li>
                 ))}

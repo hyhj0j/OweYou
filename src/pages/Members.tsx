@@ -8,6 +8,7 @@ import { createPlaceholderMember, deletePlaceholderMember, inviteLinkFor } from 
 import { getErrorMessage } from '../lib/errors'
 import { Header } from '../components/Header'
 import { BottomNav } from '../components/BottomNav'
+import { Avatar } from '../components/Avatar'
 import { Button, Card, ErrorText, Spinner, TextInput } from '../components/ui'
 
 export default function Members() {
@@ -76,9 +77,12 @@ export default function Members() {
               <ul className="space-y-2">
                 {members.map((m) => (
                   <li key={m.id}>
-                    <Card className="flex items-center justify-between">
-                      <span className="font-medium text-slate-900 dark:text-white">{m.display_name}</span>
-                      <div className="flex items-center gap-2">
+                    <Card className="flex items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar seed={m.id} kind="member" />
+                        <span className="truncate font-medium text-slate-900 dark:text-white">{m.display_name}</span>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
                         {m.user_id === userId && (
                           <span className="text-xs text-slate-400">{t.members.you}</span>
                         )}

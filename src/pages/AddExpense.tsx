@@ -11,6 +11,7 @@ import { categoryLabel } from '../lib/categories'
 import { getErrorMessage } from '../lib/errors'
 import type { GroupMember, SplitType } from '../lib/db.types'
 import type { Ledger } from '../lib/ledger'
+import { avatarEmoji } from '../lib/avatar'
 import { Header } from '../components/Header'
 import { SplitSelector } from '../components/SplitSelector'
 import { AddMemberInline } from '../components/AddMemberInline'
@@ -206,7 +207,7 @@ export default function AddExpense() {
           <Select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
             {ledger.members.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.display_name}
+                {avatarEmoji(m.id, 'member')} {m.display_name}
               </option>
             ))}
           </Select>

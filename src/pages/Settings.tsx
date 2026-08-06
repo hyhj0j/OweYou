@@ -8,12 +8,13 @@ import { categoryLabel, createCategory, deleteCategory } from '../lib/categories
 import { getErrorMessage } from '../lib/errors'
 import { Header } from '../components/Header'
 import { BottomNav } from '../components/BottomNav'
+import { Avatar } from '../components/Avatar'
 import { Button, Card, ErrorText, Select, Spinner, TextInput } from '../components/ui'
 
 export default function Settings() {
   const t = useT()
   const { language, setLanguage } = useLanguage()
-  const { userEmail, signOut } = useAuth()
+  const { userId, userEmail, signOut } = useAuth()
   const queryClient = useQueryClient()
   const { groupId = '' } = useParams()
   const { data: ledger, isLoading } = useLedger(groupId)
@@ -103,8 +104,11 @@ export default function Settings() {
 
         <section className="space-y-2">
           <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">{t.auth.account}</h2>
-          <Card className="flex items-center justify-between py-2.5">
-            <span className="truncate text-sm text-slate-800 dark:text-slate-200">{userEmail}</span>
+          <Card className="flex items-center justify-between gap-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-3">
+              {userId && <Avatar seed={userId} kind="member" size="sm" />}
+              <span className="truncate text-sm text-slate-800 dark:text-slate-200">{userEmail}</span>
+            </div>
             <button onClick={() => signOut()} className="shrink-0 text-xs font-medium text-red-500">
               {t.auth.signOut}
             </button>

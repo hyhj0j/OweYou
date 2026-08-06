@@ -8,6 +8,7 @@ import { joinGroup, listUnclaimedMembers, previewGroupByCode } from '../lib/grou
 import { getErrorMessage } from '../lib/errors'
 import { Button, Card, ErrorText, LabelRow, Spinner } from '../components/ui'
 import { Header } from '../components/Header'
+import { Avatar } from '../components/Avatar'
 
 const NEW_MEMBER = 'new'
 
@@ -111,6 +112,7 @@ export default function JoinGroup() {
                   checked={selectedClaim === m.member_id}
                   onChange={(e) => setSelectedClaim(e.target.value)}
                 />
+                <Avatar seed={m.member_id} kind="member" size="sm" />
                 {m.display_name}
               </LabelRow>
             ))}

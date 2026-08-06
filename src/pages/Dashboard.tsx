@@ -5,6 +5,7 @@ import { useGroup } from '../hooks/useGroup'
 import { useLedger } from '../hooks/useLedger'
 import { useMyMember } from '../hooks/useMyMember'
 import { useRealtimeGroup } from '../hooks/useRealtimeGroup'
+import { Avatar } from '../components/Avatar'
 import { BalanceSummary } from '../components/BalanceSummary'
 import { ExpenseListItem } from '../components/ExpenseListItem'
 import { SettleModal } from '../components/SettleModal'
@@ -39,7 +40,11 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="px-5 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
+      <header
+        className="flex items-center gap-3 px-5 pb-2"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}
+      >
+        <Avatar seed={group.id} kind="group" size="lg" />
         <h1 className="text-xl font-semibold text-slate-900 dark:text-white">{group.name}</h1>
       </header>
 
