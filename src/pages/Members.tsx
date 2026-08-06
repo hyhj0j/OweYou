@@ -7,7 +7,6 @@ import { useGroup, useGroupMembers } from '../hooks/useGroup'
 import { createPlaceholderMember, deletePlaceholderMember, inviteLinkFor } from '../lib/groups'
 import { getErrorMessage } from '../lib/errors'
 import { Header } from '../components/Header'
-import { BottomNav } from '../components/BottomNav'
 import { Avatar } from '../components/Avatar'
 import { Button, Card, ErrorText, Spinner, TextInput } from '../components/ui'
 
@@ -135,7 +134,6 @@ export default function Members() {
           </>
         )}
       </div>
-      <BottomNav groupId={groupId} />
     </div>
   )
 }

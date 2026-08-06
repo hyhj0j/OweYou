@@ -24,7 +24,7 @@ self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return
   const payload = event.data.json() as { title?: string; body?: string; url?: string }
   event.waitUntil(
-    self.registration.showNotification(payload.title ?? 'Settle Up', {
+    self.registration.showNotification(payload.title ?? 'oh-we you!', {
       body: payload.body,
       data: { url: payload.url ?? '/' },
     }),

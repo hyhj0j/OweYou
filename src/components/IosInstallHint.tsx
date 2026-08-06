@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useT } from '../i18n'
-import { Card } from './ui'
 
 const DISMISSED_KEY = 'ios-install-hint-dismissed'
 
@@ -34,8 +33,9 @@ export function IosInstallHint() {
   }
 
   return (
-    <Card className="flex items-start justify-between gap-3">
-      <div>
+    <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+      <span className="text-lg leading-none">📲</span>
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-slate-900 dark:text-white">{t.home.iosInstallTitle}</p>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t.home.iosInstallBody}</p>
       </div>
@@ -44,10 +44,10 @@ export function IosInstallHint() {
         aria-label={t.home.iosInstallDismiss}
         className="shrink-0 text-slate-400 dark:text-slate-500"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
-    </Card>
+    </div>
   )
 }

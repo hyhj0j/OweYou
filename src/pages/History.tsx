@@ -4,10 +4,15 @@ import { useT } from '../i18n'
 import { useGroup } from '../hooks/useGroup'
 import { useLedger } from '../hooks/useLedger'
 import { categoryLabel } from '../lib/categories'
+import type { Expense, Settlement } from '../lib/db.types'
 import { Header } from '../components/Header'
-import { BottomNav } from '../components/BottomNav'
 import { ExpenseListItem } from '../components/ExpenseListItem'
+import { SettlementListItem } from '../components/SettlementListItem'
 import { Select, Spinner } from '../components/ui'
+
+type HistoryItem =
+  | { type: 'expense'; date: string; expense: Expense }
+  | { type: 'settlement'; date: string; settlement: Settlement }
 
 function isThisMonth(dateStr: string): boolean {
   const d = new Date(dateStr)
@@ -26,13 +31,28 @@ export default function History() {
   const memberById = useMemo(() => new Map((ledger?.members ?? []).map((m) => [m.id, m])), [ledger])
   const categoryById = useMemo(() => new Map((ledger?.categories ?? []).map((c) => [c.id, c])), [ledger])
 
-  const filtered = useMemo(() => {
+  const items = useMemo((): HistoryItem[] => {
     if (!ledger) return []
-    return ledger.expenses.filter((e) => {
-      if (categoryFilter !== 'all' && e.category_id !== categoryFilter) return false
-      if (dateFilter === 'month' && !isThisMonth(e.expense_date)) return false
-      return true
-    })
+
+    const expenseItems: HistoryItem[] = ledger.expenses
+      .filter((e) => {
+        if (categoryFilter !== 'all' && e.category_id !== categoryFilter) return false
+        if (dateFilter === 'month' && !isThisMonth(e.expense_date)) return false
+        return true
+      })
+      .map((expense) => ({ type: 'expense', date: expense.expense_date, expense }))
+
+    // Settlements have no category, so a specific category filter excludes them.
+    const settlementItems: HistoryItem[] =
+      categoryFilter !== 'all'
+        ? []
+        : ledger.settlements
+            .filter((s) => dateFilter !== 'month' || isThisMonth(s.settled_at))
+            .map((settlement) => ({ type: 'settlement', date: settlement.settled_at, settlement }))
+
+    return [...expenseItems, ...settlementItems].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    )
   }, [ledger, categoryFilter, dateFilter])
 
   return (
@@ -60,26 +80,41 @@ export default function History() {
               </Select>
             </div>
 
-            {filtered.length === 0 ? (
+            {items.length === 0 ? (
               <p className="pt-6 text-center text-sm text-slate-500 dark:text-slate-400">{t.history.noResults}</p>
             ) : (
               <div className="space-y-2">
-                {filtered.map((expense) => (
-                  <Link key={expense.id} to={`/g/${groupId}/expenses/${expense.id}/edit`} className="block">
-                    <ExpenseListItem
-                      expense={expense}
+                {items.map((item) =>
+                  item.type === 'expense' ? (
+                    <Link
+                      key={`expense-${item.expense.id}`}
+                      to={`/g/${groupId}/expenses/${item.expense.id}`}
+                      className="block"
+                    >
+                      <ExpenseListItem
+                        expense={item.expense}
+                        currency={group.currency}
+                        paidByMember={memberById.get(item.expense.paid_by)}
+                        category={item.expense.category_id ? categoryById.get(item.expense.category_id) : undefined}
+                        createdByMember={memberById.get(item.expense.created_by)}
+                      />
+                    </Link>
+                  ) : (
+                    <SettlementListItem
+                      key={`settlement-${item.settlement.id}`}
+                      settlement={item.settlement}
                       currency={group.currency}
-                      paidByMember={memberById.get(expense.paid_by)}
-                      category={expense.category_id ? categoryById.get(expense.category_id) : undefined}
+                      fromMember={memberById.get(item.settlement.from_member)}
+                      toMember={memberById.get(item.settlement.to_member)}
+                      createdByMember={memberById.get(item.settlement.created_by)}
                     />
-                  </Link>
-                ))}
+                  ),
+                )}
               </div>
             )}
           </>
         )}
       </div>
-      <BottomNav groupId={groupId} />
     </div>
   )
 }

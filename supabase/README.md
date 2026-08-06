@@ -83,3 +83,22 @@ they're offered a "is one of these you?" choice; picking themselves calls
 their account to the existing placeholder row instead of creating a new
 one -- any expenses already recorded against it become theirs automatically.
 Fresh installs of the current `0001_init.sql` already have this.
+
+## Getting "this expense has already been settled and can no longer be edited"?
+
+That's expected, not a bug -- run `supabase/migrations/0010_lock_settled_expenses.sql`
+once in the SQL Editor if you haven't yet. `update_expense()` now refuses to
+edit an expense once a settlement has been recorded between that expense's
+payer and one of its participants, dated after the expense was created,
+since changing the expense at that point would retroactively invalidate a
+balance someone already paid against. The app's UI enforces the same rule
+(tapping an expense opens a read-only detail view; the "Edit" button is
+hidden once it's locked), but the RPC checks it independently so it can't be
+bypassed. Fresh installs of the current `0001_init.sql` already have this.
+
+## Want an optional note on expenses?
+
+Run `supabase/migrations/0011_expense_note.sql` once in the SQL Editor. It
+adds a nullable `note` column to `expenses` and threads it through
+`create_expense()`/`update_expense()` as an optional `p_note` argument.
+Fresh installs of the current `0001_init.sql` already have this.

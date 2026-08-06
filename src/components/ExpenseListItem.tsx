@@ -10,14 +10,17 @@ export function ExpenseListItem({
   currency,
   paidByMember,
   category,
+  createdByMember,
 }: {
   expense: Expense
   currency: string
   paidByMember: GroupMember | undefined
   category: ExpenseCategory | undefined
+  createdByMember?: GroupMember
 }) {
   const t = useT()
   const { language } = useLanguage()
+  const showLoggedBy = createdByMember && createdByMember.id !== paidByMember?.id
 
   return (
     <Card className="flex items-center justify-between gap-3">
@@ -31,6 +34,11 @@ export function ExpenseListItem({
               category: categoryLabel(category, t),
             })}
           </p>
+          {showLoggedBy && (
+            <p className="truncate text-[11px] text-slate-400 dark:text-slate-500">
+              {format(t.history.loggedByLine, { name: createdByMember.display_name })}
+            </p>
+          )}
         </div>
       </div>
       <div className="shrink-0 text-right">

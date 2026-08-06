@@ -1,4 +1,4 @@
-import { avatarColorClasses, avatarEmoji } from '../lib/avatar'
+import { avatarEmoji } from '../lib/avatar'
 
 const SIZES = {
   sm: 'h-7 w-7 text-sm',
@@ -19,7 +19,7 @@ export function Avatar({
 }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-full ${SIZES[size]} ${avatarColorClasses(seed)} ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 ${SIZES[size]} ${className}`}
       aria-hidden="true"
     >
       {avatarEmoji(seed, kind)}

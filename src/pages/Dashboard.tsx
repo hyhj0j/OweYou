@@ -9,7 +9,6 @@ import { Avatar } from '../components/Avatar'
 import { BalanceSummary } from '../components/BalanceSummary'
 import { ExpenseListItem } from '../components/ExpenseListItem'
 import { SettleModal } from '../components/SettleModal'
-import { BottomNav } from '../components/BottomNav'
 import { Button, Spinner } from '../components/ui'
 import type { SettlementTransaction } from '../lib/settleUp'
 
@@ -75,7 +74,7 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-2">
               {recentExpenses.map((expense) => (
-                <Link key={expense.id} to={`/g/${groupId}/expenses/${expense.id}/edit`} className="block">
+                <Link key={expense.id} to={`/g/${groupId}/expenses/${expense.id}`} className="block">
                   <ExpenseListItem
                     expense={expense}
                     currency={group.currency}
@@ -100,8 +99,6 @@ export default function Dashboard() {
           + {t.dashboard.addExpense}
         </Button>
       </div>
-
-      <BottomNav groupId={groupId} />
 
       {settlingTx && myMember && (
         <SettleModal

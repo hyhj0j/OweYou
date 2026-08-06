@@ -37,6 +37,7 @@ export type Expense = {
   paid_by: string
   expense_date: string
   split_type: SplitType
+  note: string | null
   created_by: string
   created_at: string
 }

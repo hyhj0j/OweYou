@@ -9,6 +9,7 @@ import { createExpense, updateExpense } from '../lib/expenses'
 import { computeSplit } from '../lib/splitCalc'
 import { categoryLabel } from '../lib/categories'
 import { getErrorMessage } from '../lib/errors'
+import { isExpenseLocked } from '../lib/expenseLock'
 import type { GroupMember, SplitType } from '../lib/db.types'
 import type { Ledger } from '../lib/ledger'
 import { avatarEmoji } from '../lib/avatar'
@@ -37,6 +38,7 @@ export default function AddExpense() {
   const [paidBy, setPaidBy] = useState('')
   const [date, setDate] = useState(today())
   const [splitType, setSplitType] = useState<SplitType>('equal')
+  const [note, setNote] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -66,6 +68,7 @@ export default function AddExpense() {
     setPaidBy(expense.paid_by)
     setDate(expense.expense_date)
     setSplitType(expense.split_type)
+    setNote(expense.note ?? '')
     setSelectedIds(new Set(shares.map((s) => s.member_id)))
     if (expense.split_type === 'custom_amount') {
       setCustomValues(Object.fromEntries(shares.map((s) => [s.member_id, s.share_amount])))
@@ -84,6 +87,13 @@ export default function AddExpense() {
   }, [isEditing, editInitialized, ledger, expenseId])
 
   const numericAmount = Number(amount) || 0
+
+  const locked = useMemo(() => {
+    if (!isEditing || !ledger) return false
+    const expense = ledger.expenses.find((e) => e.id === expenseId)
+    if (!expense) return false
+    return isExpenseLocked(expense, ledger.shares, ledger.settlements)
+  }, [isEditing, ledger, expenseId])
 
   const split = useMemo(
     () => computeSplit(splitType, numericAmount, [...selectedIds], customValues),
@@ -115,7 +125,7 @@ export default function AddExpense() {
     setSelectedIds((prev) => new Set(prev).add(member.id))
   }
 
-  const canSubmit = description.trim() && numericAmount > 0 && paidBy && split.isValid && !submitting
+  const canSubmit = description.trim() && numericAmount > 0 && paidBy && split.isValid && !submitting && !locked
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -134,6 +144,7 @@ export default function AddExpense() {
           expenseDate: date,
           splitType,
           shares,
+          note,
         })
       } else {
         await createExpense({
@@ -145,6 +156,7 @@ export default function AddExpense() {
           expenseDate: date,
           splitType,
           shares,
+          note,
         })
       }
       await queryClient.invalidateQueries({ queryKey: ['ledger', groupId] })
@@ -230,6 +242,15 @@ export default function AddExpense() {
           />
         </div>
 
+        <Field label={t.expense.note}>
+          <TextInput
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={t.expense.notePlaceholder}
+          />
+        </Field>
+
+        {locked && <p className="text-sm text-slate-500 dark:text-slate-400">{t.expense.lockedNotice}</p>}
         <ErrorText>{error}</ErrorText>
         <Button type="submit" className="w-full" disabled={!canSubmit}>
           {isEditing

@@ -75,6 +75,7 @@ create table expenses (
   paid_by uuid not null references group_members(id) on delete restrict,
   expense_date date not null default current_date,
   split_type text not null check (split_type in ('equal', 'custom_amount', 'custom_percent')),
+  note text,
   created_by uuid not null references group_members(id) on delete restrict,
   created_at timestamptz not null default now()
 );
@@ -498,7 +499,8 @@ create or replace function create_expense(
   p_paid_by uuid,
   p_expense_date date,
   p_split_type text,
-  p_shares jsonb -- [{"member_id": uuid, "share_amount": numeric}, ...]
+  p_shares jsonb, -- [{"member_id": uuid, "share_amount": numeric}, ...]
+  p_note text default null
 )
 returns uuid
 language plpgsql
@@ -511,6 +513,7 @@ declare
   v_share jsonb;
   v_sum numeric;
   v_description text := trim(p_description);
+  v_note text := nullif(trim(coalesce(p_note, '')), '');
 begin
   if v_uid is null then
     raise exception 'not authenticated';
@@ -541,10 +544,10 @@ begin
     raise exception 'shares (%) must sum to the expense amount (%)', v_sum, p_amount;
   end if;
 
-  insert into expenses (group_id, description, amount, category_id, paid_by, expense_date, split_type, created_by)
+  insert into expenses (group_id, description, amount, category_id, paid_by, expense_date, split_type, note, created_by)
   values (
     p_group_id, v_description, p_amount, p_category_id, p_paid_by,
-    coalesce(p_expense_date, current_date), p_split_type,
+    coalesce(p_expense_date, current_date), p_split_type, v_note,
     (select id from group_members where group_id = p_group_id and user_id = v_uid)
   )
   returning id into v_expense_id;
@@ -565,6 +568,14 @@ $$;
 -- joined, now needing a corrected payer/amount/split). Same validation as
 -- create_expense() above, but updates the row and replaces its shares
 -- instead of inserting a new expense.
+--
+-- Locked once a settlement has been recorded between the expense's (old)
+-- payer and one of its (old) participants, dated after the expense was
+-- created -- editing it at that point would retroactively change a balance
+-- someone already paid against. getSettlementSummary() (src/lib/settleUp.ts)
+-- only ever creates a participant-owes-payer debt per expense, never a debt
+-- between two participants, so that's the only relationship an edit here
+-- could invalidate; mirrored client-side in src/lib/expenseLock.ts.
 create or replace function update_expense(
   p_expense_id uuid,
   p_description text,
@@ -573,7 +584,8 @@ create or replace function update_expense(
   p_paid_by uuid,
   p_expense_date date,
   p_split_type text,
-  p_shares jsonb
+  p_shares jsonb,
+  p_note text default null
 )
 returns uuid
 language plpgsql
@@ -583,21 +595,41 @@ as $$
 declare
   v_uid uuid := auth.uid();
   v_group_id uuid;
+  v_old_paid_by uuid;
+  v_old_created_at timestamptz;
   v_share jsonb;
   v_sum numeric;
   v_description text := trim(p_description);
+  v_note text := nullif(trim(coalesce(p_note, '')), '');
 begin
   if v_uid is null then
     raise exception 'not authenticated';
   end if;
 
-  select group_id into v_group_id from expenses where id = p_expense_id;
+  select group_id, paid_by, created_at into v_group_id, v_old_paid_by, v_old_created_at
+  from expenses where id = p_expense_id;
   if v_group_id is null then
     raise exception 'expense not found';
   end if;
   if not exists (select 1 from group_members where group_id = v_group_id and user_id = v_uid) then
     raise exception 'not a member of this group';
   end if;
+
+  if exists (
+    select 1
+    from settlements s
+    join expense_shares es on es.expense_id = p_expense_id
+    where s.group_id = v_group_id
+      and s.settled_at > v_old_created_at
+      and es.member_id <> v_old_paid_by
+      and (
+        (s.from_member = v_old_paid_by and s.to_member = es.member_id)
+        or (s.to_member = v_old_paid_by and s.from_member = es.member_id)
+      )
+  ) then
+    raise exception 'this expense has already been settled and can no longer be edited';
+  end if;
+
   if v_description = '' then
     raise exception 'description is required';
   end if;
@@ -627,7 +659,8 @@ begin
     category_id = p_category_id,
     paid_by = p_paid_by,
     expense_date = coalesce(p_expense_date, expense_date),
-    split_type = p_split_type
+    split_type = p_split_type,
+    note = v_note
   where id = p_expense_id;
 
   delete from expense_shares where expense_id = p_expense_id;

@@ -1,6 +1,6 @@
 export const en = {
   common: {
-    appName: 'Settle Up',
+    appName: 'oh-we you!',
     save: 'Save',
     cancel: 'Cancel',
     add: 'Add',
@@ -17,7 +17,7 @@ export const en = {
     somethingWentWrong: 'Something went wrong.',
   },
   auth: {
-    signInTitle: 'Settle Up',
+    signInTitle: 'oh-we you!',
     signInSubtitle: 'Sign in to see your groups and keep them in sync across devices.',
     signInWithGoogle: 'Continue with Google',
     signingIn: 'Signing in…',
@@ -32,7 +32,7 @@ export const en = {
     submitting: 'Saving…',
   },
   home: {
-    title: 'Settle Up',
+    title: 'oh-we you!',
     subtitle: 'Split shared expenses with your roommates, without the mental math.',
     yourGroups: 'Your groups',
     noGroups: "You're not in any groups yet.",
@@ -40,8 +40,8 @@ export const en = {
     joinGroup: 'Join with an invite link',
     joinGroupPlaceholder: 'Paste an invite link or code',
     joinGroupSubmit: 'Join',
-    iosInstallTitle: 'Add Settle Up to your Home Screen',
-    iosInstallBody: 'Tap the Share button, then "Add to Home Screen" for full-screen, app-like access.',
+    iosInstallTitle: 'Add oh-we you! to your Home Screen',
+    iosInstallBody: 'Tap the Share icon (□↑) in Safari\'s toolbar, then "Add to Home Screen".',
     iosInstallDismiss: 'Dismiss',
   },
   createGroup: {
@@ -97,6 +97,9 @@ export const en = {
     addMemberToggle: "Add someone who hasn't joined yet",
     addMemberPlaceholder: 'Their name',
     addMemberSubmit: 'Add',
+    note: 'Note (optional)',
+    notePlaceholder: 'Any extra detail worth remembering',
+    lockedNotice: 'This expense has already been settled and can no longer be edited.',
   },
   history: {
     title: 'History',
@@ -105,6 +108,8 @@ export const en = {
     filterThisMonth: 'This month',
     noResults: 'No expenses match these filters.',
     paidByLine: '{name} paid · {category}',
+    settledLine: '{from} paid {to}',
+    loggedByLine: 'Logged by {name}',
   },
   members: {
     title: 'Members',
@@ -252,6 +257,9 @@ export type Dictionary = {
     addMemberToggle: string
     addMemberPlaceholder: string
     addMemberSubmit: string
+    note: string
+    notePlaceholder: string
+    lockedNotice: string
   }
   history: {
     title: string
@@ -260,6 +268,8 @@ export type Dictionary = {
     filterThisMonth: string
     noResults: string
     paidByLine: string
+    settledLine: string
+    loggedByLine: string
   }
   members: {
     title: string
@@ -308,7 +318,7 @@ export type Dictionary = {
 
 export const ko: Dictionary = {
   common: {
-    appName: 'Settle Up',
+    appName: 'oh-we you!',
     save: '저장',
     cancel: '취소',
     add: '추가',
@@ -325,7 +335,7 @@ export const ko: Dictionary = {
     somethingWentWrong: '문제가 발생했습니다.',
   },
   auth: {
-    signInTitle: 'Settle Up',
+    signInTitle: 'oh-we you!',
     signInSubtitle: '로그인하면 내 그룹을 여러 기기에서 동일하게 볼 수 있어요.',
     signInWithGoogle: 'Google로 계속하기',
     signingIn: '로그인하는 중…',
@@ -340,7 +350,7 @@ export const ko: Dictionary = {
     submitting: '저장하는 중…',
   },
   home: {
-    title: 'Settle Up',
+    title: 'oh-we you!',
     subtitle: '룸메이트와 지출을 나누고, 암산은 이제 그만.',
     yourGroups: '내 그룹',
     noGroups: '아직 참여한 그룹이 없어요.',
@@ -348,8 +358,8 @@ export const ko: Dictionary = {
     joinGroup: '초대 링크로 참여',
     joinGroupPlaceholder: '초대 링크 또는 코드를 붙여넣으세요',
     joinGroupSubmit: '참여하기',
-    iosInstallTitle: '홈 화면에 Settle Up 추가하기',
-    iosInstallBody: '공유 버튼을 누른 다음 "홈 화면에 추가"를 선택하면 앱처럼 전체 화면으로 쓸 수 있어요.',
+    iosInstallTitle: '홈 화면에 oh-we you! 추가하기',
+    iosInstallBody: 'Safari 하단 공유 아이콘(□↑)을 누른 다음 "홈 화면에 추가"를 선택하세요.',
     iosInstallDismiss: '닫기',
   },
   createGroup: {
@@ -405,6 +415,9 @@ export const ko: Dictionary = {
     addMemberToggle: '아직 참여 전인 사람 추가',
     addMemberPlaceholder: '이름',
     addMemberSubmit: '추가',
+    note: '비고 (선택)',
+    notePlaceholder: '기억해두면 좋을 추가 정보',
+    lockedNotice: '이미 정산이 완료된 지출이라 더 이상 수정할 수 없어요.',
   },
   history: {
     title: '지출 내역',
@@ -413,6 +426,8 @@ export const ko: Dictionary = {
     filterThisMonth: '이번 달',
     noResults: '조건에 맞는 지출이 없어요.',
     paidByLine: '{name} 결제 · {category}',
+    settledLine: '{from} → {to} 정산 완료',
+    loggedByLine: '기록: {name}',
   },
   members: {
     title: '멤버',

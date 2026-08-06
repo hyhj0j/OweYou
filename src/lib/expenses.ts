@@ -12,6 +12,7 @@ export async function createExpense(input: {
   expenseDate: string
   splitType: SplitType
   shares: ShareInput[]
+  note?: string
 }): Promise<string> {
   const { data, error } = await supabase.rpc('create_expense', {
     p_group_id: input.groupId,
@@ -22,6 +23,7 @@ export async function createExpense(input: {
     p_expense_date: input.expenseDate,
     p_split_type: input.splitType,
     p_shares: input.shares,
+    p_note: input.note ?? null,
   })
   if (error) throw error
   return data as string
@@ -36,6 +38,7 @@ export async function updateExpense(input: {
   expenseDate: string
   splitType: SplitType
   shares: ShareInput[]
+  note?: string
 }): Promise<string> {
   const { data, error } = await supabase.rpc('update_expense', {
     p_expense_id: input.expenseId,
@@ -46,6 +49,7 @@ export async function updateExpense(input: {
     p_expense_date: input.expenseDate,
     p_split_type: input.splitType,
     p_shares: input.shares,
+    p_note: input.note ?? null,
   })
   if (error) throw error
   return data as string

@@ -1,4 +1,4 @@
-# Settle Up
+# oh-we you!
 
 A mobile-first PWA for splitting shared expenses with roommates. Log who paid
 for what, and the app nets everything down to the minimal set of "who owes

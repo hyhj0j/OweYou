@@ -7,7 +7,6 @@ import { useLedger } from '../hooks/useLedger'
 import { categoryLabel, createCategory, deleteCategory } from '../lib/categories'
 import { getErrorMessage } from '../lib/errors'
 import { Header } from '../components/Header'
-import { BottomNav } from '../components/BottomNav'
 import { Avatar } from '../components/Avatar'
 import { Button, Card, ErrorText, Select, Spinner, TextInput } from '../components/ui'
 
@@ -115,7 +114,6 @@ export default function Settings() {
           </Card>
         </section>
       </div>
-      <BottomNav groupId={groupId} />
     </div>
   )
 }
