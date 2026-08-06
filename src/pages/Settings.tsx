@@ -1,25 +1,31 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage, useT, type Language } from '../i18n'
 import { useAuth } from '../hooks/useAuth'
+import { useGroup } from '../hooks/useGroup'
 import { useLedger } from '../hooks/useLedger'
 import { categoryLabel, createCategory, deleteCategory } from '../lib/categories'
+import { deleteGroup } from '../lib/groups'
 import { getErrorMessage } from '../lib/errors'
 import { Header } from '../components/Header'
 import { Avatar } from '../components/Avatar'
+import { DeleteGroupModal } from '../components/DeleteGroupModal'
 import { Button, Card, ErrorText, Select, Spinner, TextInput } from '../components/ui'
 
 export default function Settings() {
   const t = useT()
+  const navigate = useNavigate()
   const { language, setLanguage } = useLanguage()
   const { userId, userEmail, signOut } = useAuth()
   const queryClient = useQueryClient()
   const { groupId = '' } = useParams()
+  const { data: group } = useGroup(groupId)
   const { data: ledger, isLoading } = useLedger(groupId)
   const [newCategory, setNewCategory] = useState('')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const usedCategoryIds = new Set((ledger?.expenses ?? []).map((e) => e.category_id).filter(Boolean))
 
@@ -47,6 +53,12 @@ export default function Settings() {
     } catch {
       setError(t.settings.categoryInUse)
     }
+  }
+
+  async function handleDeleteGroup() {
+    await deleteGroup(groupId)
+    await queryClient.invalidateQueries({ queryKey: ['my-groups', userId] })
+    navigate('/', { replace: true })
   }
 
   return (
@@ -113,7 +125,30 @@ export default function Settings() {
             </button>
           </Card>
         </section>
+
+        {group && group.created_by === userId && (
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium text-red-500">{t.settings.dangerZone}</h2>
+            <Card className="flex items-center justify-between gap-3 py-2.5">
+              <span className="text-sm text-slate-800 dark:text-slate-200">{group.name}</span>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="shrink-0 text-xs font-medium text-red-500"
+              >
+                {t.settings.deleteGroup}
+              </button>
+            </Card>
+          </section>
+        )}
       </div>
+
+      {showDeleteModal && group && (
+        <DeleteGroupModal
+          groupName={group.name}
+          onConfirm={handleDeleteGroup}
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   )
 }

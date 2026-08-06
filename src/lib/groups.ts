@@ -92,3 +92,13 @@ export async function fetchGroupMembers(groupId: string): Promise<GroupMember[]>
 export function inviteLinkFor(inviteCode: string): string {
   return `${window.location.origin}/join/${inviteCode}`
 }
+
+// Soft delete: the group and its expenses/settlements stay in the database,
+// this just makes it invisible to everyone (RLS on `groups` hides any row
+// with deleted_at set). Gated by the existing "groups: creator can update"
+// RLS policy, so this silently fails to affect anything if the caller isn't
+// the group's creator.
+export async function deleteGroup(groupId: string): Promise<void> {
+  const { error } = await supabase.from('groups').update({ deleted_at: new Date().toISOString() }).eq('id', groupId)
+  if (error) throw error
+}

@@ -27,7 +27,12 @@ create table groups (
   currency text not null default 'CAD' check (currency in ('CAD', 'KRW', 'USD')),
   invite_code text not null unique default generate_invite_code(),
   created_by uuid not null references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Soft delete: set instead of actually removing the row, so expenses/
+  -- settlements/history stay intact. A non-null value just makes the group
+  -- (and by extension its invite link) invisible to everyone, including its
+  -- creator -- see the updated "groups: members can view" policy below.
+  deleted_at timestamptz
 );
 
 -- user_id is nullable: a row with user_id is null is a "placeholder" member --
@@ -158,7 +163,7 @@ alter table profiles enable row level security;
 -- Non-members can't SELECT a group by id/invite_code here on purpose -- joining
 -- goes through preview_group_by_code()/join_group() below (SECURITY DEFINER).
 create policy "groups: members can view" on groups
-  for select using (is_group_member(id));
+  for select using (is_group_member(id) and deleted_at is null);
 
 create policy "groups: creator can insert" on groups
   for insert with check (created_by = auth.uid());
@@ -330,7 +335,7 @@ begin
     select g.id, g.name, g.currency, count(m.id)
     from groups g
     left join group_members m on m.group_id = g.id
-    where g.invite_code = p_invite_code
+    where g.invite_code = p_invite_code and g.deleted_at is null
     group by g.id;
 end;
 $$;
@@ -363,7 +368,7 @@ begin
     raise exception 'display name is required';
   end if;
 
-  select * into v_group from groups where invite_code = p_invite_code;
+  select * into v_group from groups where invite_code = p_invite_code and deleted_at is null;
   if not found then
     raise exception 'invalid invite code';
   end if;
@@ -421,7 +426,7 @@ as $$
   select gm.id, gm.display_name
   from group_members gm
   join groups g on g.id = gm.group_id
-  where g.invite_code = p_invite_code and gm.user_id is null
+  where g.invite_code = p_invite_code and gm.user_id is null and g.deleted_at is null
   order by gm.created_at;
 $$;
 

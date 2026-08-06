@@ -140,6 +140,12 @@ export const en = {
     categoryNamePlaceholder: 'Category name',
     deleteCategory: 'Delete',
     categoryInUse: "Can't delete — still used by some expenses.",
+    dangerZone: 'Danger zone',
+    deleteGroup: 'Delete group',
+    deletingGroup: 'Deleting…',
+    deleteGroupConfirmTitle: 'Delete this group?',
+    deleteGroupConfirmBody:
+      'Nothing is actually deleted — expenses and history stay in the database — but no one, including you, will be able to access "{name}" from the app again.',
   },
   nav: {
     groups: 'Groups',
@@ -300,6 +306,11 @@ export type Dictionary = {
     categoryNamePlaceholder: string
     deleteCategory: string
     categoryInUse: string
+    dangerZone: string
+    deleteGroup: string
+    deletingGroup: string
+    deleteGroupConfirmTitle: string
+    deleteGroupConfirmBody: string
   }
   nav: {
     groups: string
@@ -458,6 +469,12 @@ export const ko: Dictionary = {
     categoryNamePlaceholder: '카테고리 이름',
     deleteCategory: '삭제',
     categoryInUse: '이미 사용 중인 카테고리라 삭제할 수 없어요.',
+    dangerZone: '위험 구역',
+    deleteGroup: '그룹 삭제',
+    deletingGroup: '삭제하는 중…',
+    deleteGroupConfirmTitle: '이 그룹을 삭제할까요?',
+    deleteGroupConfirmBody:
+      '실제로 데이터가 지워지지는 않아요 — 지출·정산 기록은 DB에 그대로 남습니다 — 다만 앞으로는 본인을 포함해 아무도 "{name}"에 접근할 수 없게 돼요.',
   },
   nav: {
     groups: '그룹',

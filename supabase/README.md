@@ -96,6 +96,18 @@ balance someone already paid against. The app's UI enforces the same rule
 hidden once it's locked), but the RPC checks it independently so it can't be
 bypassed. Fresh installs of the current `0001_init.sql` already have this.
 
+## Want to delete a group?
+
+Run `supabase/migrations/0012_delete_group.sql` once in the SQL Editor. It
+adds `groups.deleted_at` and updates the "groups: members can view" policy
+(plus `preview_group_by_code()`/`join_group()`/`list_unclaimed_members()`) to
+treat a deleted group as invisible -- to everyone, including its creator, and
+to anyone still holding its invite link. Nothing is actually removed:
+expenses/settlements/members stay in the database, just permanently hidden.
+Only the group's creator can delete it, enforced by the existing "groups:
+creator can update" RLS policy. Fresh installs of the current `0001_init.sql`
+already have this.
+
 ## Want an optional note on expenses?
 
 Run `supabase/migrations/0011_expense_note.sql` once in the SQL Editor. It
