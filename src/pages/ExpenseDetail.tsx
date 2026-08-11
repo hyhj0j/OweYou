@@ -1,21 +1,27 @@
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { format, useLanguage, useT } from '../i18n'
 import { useGroup } from '../hooks/useGroup'
 import { useLedger } from '../hooks/useLedger'
 import { categoryLabel } from '../lib/categories'
 import { formatCurrency } from '../lib/currency'
 import { isExpenseLocked } from '../lib/expenseLock'
+import { deleteExpense } from '../lib/expenses'
 import { Header } from '../components/Header'
 import { Avatar } from '../components/Avatar'
+import { DeleteExpenseModal } from '../components/DeleteExpenseModal'
 import { Button, Card, Spinner } from '../components/ui'
 
 export default function ExpenseDetail() {
   const t = useT()
   const { language } = useLanguage()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { groupId = '', expenseId = '' } = useParams()
   const { data: group } = useGroup(groupId)
   const { data: ledger, isLoading } = useLedger(groupId)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   if (isLoading || !group || !ledger) {
     return (
@@ -109,16 +115,36 @@ export default function ExpenseDetail() {
           </p>
         )}
 
-        <div className="pt-2">
+        <div className="space-y-2 pt-2">
           {locked ? (
             <p className="text-center text-sm text-slate-500 dark:text-slate-400">{t.expense.lockedNotice}</p>
           ) : (
-            <Button className="w-full" onClick={() => navigate(`/g/${groupId}/expenses/${expenseId}/edit`)}>
-              {t.common.edit}
-            </Button>
+            <>
+              <Button className="w-full" onClick={() => navigate(`/g/${groupId}/expenses/${expenseId}/edit`)}>
+                {t.common.edit}
+              </Button>
+              <Button variant="danger" className="w-full" onClick={() => setShowDeleteModal(true)}>
+                {t.common.delete}
+              </Button>
+            </>
           )}
         </div>
       </div>
+
+      {showDeleteModal && (
+        <DeleteExpenseModal
+          description={expense.description}
+          onConfirm={async () => {
+            await deleteExpense(expenseId)
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['ledger', groupId] }),
+              queryClient.invalidateQueries({ queryKey: ['deleted-expenses', groupId] }),
+            ])
+            navigate(`/g/${groupId}/history`, { replace: true })
+          }}
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   )
 }

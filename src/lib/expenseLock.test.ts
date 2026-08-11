@@ -15,6 +15,8 @@ function makeExpense(overrides: Partial<Expense> = {}): Expense {
     note: null,
     created_by: 'yeji',
     created_at: '2026-01-01T00:00:00Z',
+    deleted_at: null,
+    deleted_by: null,
     ...overrides,
   }
 }

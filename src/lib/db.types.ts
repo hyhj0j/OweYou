@@ -40,6 +40,8 @@ export type Expense = {
   note: string | null
   created_by: string
   created_at: string
+  deleted_at: string | null
+  deleted_by: string | null
 }
 
 export type ExpenseShare = {

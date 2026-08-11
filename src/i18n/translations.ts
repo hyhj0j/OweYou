@@ -100,6 +100,9 @@ export const en = {
     note: 'Note (optional)',
     notePlaceholder: 'Any extra detail worth remembering',
     lockedNotice: 'This expense has already been settled and can no longer be edited.',
+    deleteConfirmTitle: 'Delete this expense?',
+    deleteConfirmBody: '"{description}" will move to the deleted list in History. This can\'t be undone from the app.',
+    deleting: 'Deleting…',
   },
   history: {
     title: 'History',
@@ -110,6 +113,10 @@ export const en = {
     paidByLine: '{name} paid · {category}',
     settledLine: '{from} paid {to}',
     loggedByLine: 'Logged by {name}',
+    tabActive: 'History',
+    tabDeleted: 'Deleted',
+    deletedNoResults: 'No deleted expenses.',
+    deletedByLine: 'Deleted by {name} · {date}',
   },
   members: {
     title: 'Members',
@@ -146,6 +153,15 @@ export const en = {
     deleteGroupConfirmTitle: 'Delete this group?',
     deleteGroupConfirmBody:
       'Nothing is actually deleted — expenses and history stay in the database — but no one, including you, will be able to access "{name}" from the app again.',
+    notifications: 'Notifications',
+    notificationsHint: 'Get a push notification when someone in this group adds an expense.',
+    notificationsEnable: 'Turn on notifications',
+    notificationsDisable: 'Turn off notifications',
+    notificationsEnabling: 'Turning on…',
+    notificationsDisabling: 'Turning off…',
+    notificationsUnsupported: "This browser doesn't support push notifications.",
+    notificationsDenied: 'Notifications are blocked for this site — enable them in your browser settings.',
+    notificationsError: "Couldn't turn on notifications. Try again.",
   },
   nav: {
     groups: 'Groups',
@@ -266,6 +282,9 @@ export type Dictionary = {
     note: string
     notePlaceholder: string
     lockedNotice: string
+    deleteConfirmTitle: string
+    deleteConfirmBody: string
+    deleting: string
   }
   history: {
     title: string
@@ -276,6 +295,10 @@ export type Dictionary = {
     paidByLine: string
     settledLine: string
     loggedByLine: string
+    tabActive: string
+    tabDeleted: string
+    deletedNoResults: string
+    deletedByLine: string
   }
   members: {
     title: string
@@ -311,6 +334,15 @@ export type Dictionary = {
     deletingGroup: string
     deleteGroupConfirmTitle: string
     deleteGroupConfirmBody: string
+    notifications: string
+    notificationsHint: string
+    notificationsEnable: string
+    notificationsDisable: string
+    notificationsEnabling: string
+    notificationsDisabling: string
+    notificationsUnsupported: string
+    notificationsDenied: string
+    notificationsError: string
   }
   nav: {
     groups: string
@@ -429,6 +461,9 @@ export const ko: Dictionary = {
     note: '비고 (선택)',
     notePlaceholder: '기억해두면 좋을 추가 정보',
     lockedNotice: '이미 정산이 완료된 지출이라 더 이상 수정할 수 없어요.',
+    deleteConfirmTitle: '이 지출을 삭제할까요?',
+    deleteConfirmBody: '"{description}" 항목이 내역의 삭제됨 목록으로 이동해요. 앱에서 되돌릴 수 없어요.',
+    deleting: '삭제하는 중…',
   },
   history: {
     title: '지출 내역',
@@ -439,6 +474,10 @@ export const ko: Dictionary = {
     paidByLine: '{name} 결제 · {category}',
     settledLine: '{from} → {to} 정산 완료',
     loggedByLine: '기록: {name}',
+    tabActive: '지출 내역',
+    tabDeleted: '삭제됨',
+    deletedNoResults: '삭제된 지출이 없어요.',
+    deletedByLine: '{name}님이 삭제 · {date}',
   },
   members: {
     title: '멤버',
@@ -475,6 +514,15 @@ export const ko: Dictionary = {
     deleteGroupConfirmTitle: '이 그룹을 삭제할까요?',
     deleteGroupConfirmBody:
       '실제로 데이터가 지워지지는 않아요 — 지출·정산 기록은 DB에 그대로 남습니다 — 다만 앞으로는 본인을 포함해 아무도 "{name}"에 접근할 수 없게 돼요.',
+    notifications: '알림',
+    notificationsHint: '이 그룹에 새 지출이 추가되면 푸시 알림을 받아요.',
+    notificationsEnable: '알림 켜기',
+    notificationsDisable: '알림 끄기',
+    notificationsEnabling: '켜는 중…',
+    notificationsDisabling: '끄는 중…',
+    notificationsUnsupported: '이 브라우저는 푸시 알림을 지원하지 않아요.',
+    notificationsDenied: '이 사이트의 알림이 차단되어 있어요 — 브라우저 설정에서 허용해주세요.',
+    notificationsError: '알림을 켜지 못했어요. 다시 시도해주세요.',
   },
   nav: {
     groups: '그룹',

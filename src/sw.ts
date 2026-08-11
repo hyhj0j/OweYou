@@ -14,10 +14,10 @@ clientsClaim()
 precacheAndRoute(self.__WB_MANIFEST)
 
 // ---------------------------------------------------------------------------
-// Web Push scaffold. Nothing calls PushManager.subscribe() anywhere in the
-// app yet (out of scope for this version), but these listeners give a future
-// standard Web Push integration a place to land without touching the
-// precaching setup above or requiring a new service worker file.
+// Web Push. src/lib/push.ts subscribes via PushManager and saves the
+// subscription to push_subscriptions; supabase/functions/notify-expense
+// sends the actual push when someone adds an expense. These listeners show
+// it and route a tap to the expense.
 // ---------------------------------------------------------------------------
 
 self.addEventListener('push', (event: PushEvent) => {

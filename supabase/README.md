@@ -114,3 +114,26 @@ Run `supabase/migrations/0011_expense_note.sql` once in the SQL Editor. It
 adds a nullable `note` column to `expenses` and threads it through
 `create_expense()`/`update_expense()` as an optional `p_note` argument.
 Fresh installs of the current `0001_init.sql` already have this.
+
+## Want to delete an expense that hasn't been settled yet?
+
+Run `supabase/migrations/0013_delete_expense.sql` once in the SQL Editor. It
+adds `expenses.deleted_at`/`deleted_by` and a `delete_expense()` RPC, gated
+by the same "already settled" lock as `update_expense()` (see the previous
+section) -- an expense that's been paid against can no longer be deleted,
+same as it can no longer be edited. Nothing is actually removed: the row and
+its shares stay in the database (a settlement's numbers stay correct), just
+excluded from the normal expense list/balance calculation. History's
+"Deleted" tab lists them separately via `fetchDeletedExpenses()`
+(`src/lib/ledger.ts`). Fresh installs of the current `0001_init.sql` already
+have this.
+
+## Want push notifications when someone adds an expense?
+
+The `push_subscriptions` table and RLS policy already exist in
+`0001_init.sql`; what's missing on a fresh project is the VAPID key pair and
+the `notify-expense` Edge Function that actually sends the push. See
+`supabase/functions/notify-expense/README.md` for the full setup (generating
+keys, deploying the function, setting its secrets). Until that's done,
+`createExpense()`'s call to it just fails silently -- expenses still work
+fine, nobody gets notified.

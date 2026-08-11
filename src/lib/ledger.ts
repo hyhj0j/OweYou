@@ -16,6 +16,7 @@ export async function fetchLedger(groupId: string): Promise<Ledger> {
       .from('expenses')
       .select('*')
       .eq('group_id', groupId)
+      .is('deleted_at', null)
       .order('expense_date', { ascending: false })
       .order('created_at', { ascending: false }),
     supabase.from('settlements').select('*').eq('group_id', groupId).order('settled_at', { ascending: false }),
@@ -41,4 +42,18 @@ export async function fetchLedger(groupId: string): Promise<Ledger> {
     categories: categoriesRes.data as ExpenseCategory[],
     shares,
   }
+}
+
+// Powers the "deleted" view in History -- kept as a separate query rather
+// than folded into fetchLedger() so the common case (balances, dashboard,
+// active history) never pays for fetching rows nobody's looking at.
+export async function fetchDeletedExpenses(groupId: string): Promise<Expense[]> {
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .eq('group_id', groupId)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false })
+  if (error) throw error
+  return data as Expense[]
 }

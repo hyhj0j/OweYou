@@ -26,7 +26,19 @@ export async function createExpense(input: {
     p_note: input.note ?? null,
   })
   if (error) throw error
-  return data as string
+  const expenseId = data as string
+
+  // Fire-and-forget: a push notification failing (or notify-expense not
+  // being deployed at all -- see supabase/functions/notify-expense) should
+  // never block or fail the expense that was already successfully created.
+  void supabase.functions.invoke('notify-expense', { body: { expenseId } }).catch(() => {})
+
+  return expenseId
+}
+
+export async function deleteExpense(expenseId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_expense', { p_expense_id: expenseId })
+  if (error) throw error
 }
 
 export async function updateExpense(input: {

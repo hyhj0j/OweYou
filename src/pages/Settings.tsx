@@ -1,17 +1,28 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage, useT, type Language } from '../i18n'
 import { useAuth } from '../hooks/useAuth'
 import { useGroup } from '../hooks/useGroup'
 import { useLedger } from '../hooks/useLedger'
+import { useMyMember } from '../hooks/useMyMember'
 import { categoryLabel, createCategory, deleteCategory } from '../lib/categories'
 import { deleteGroup } from '../lib/groups'
 import { getErrorMessage } from '../lib/errors'
+import {
+  disablePushForMember,
+  enablePushForMember,
+  isPushEnabledForMember,
+  isPushSupported,
+} from '../lib/push'
 import { Header } from '../components/Header'
 import { Avatar } from '../components/Avatar'
 import { DeleteGroupModal } from '../components/DeleteGroupModal'
 import { Button, Card, ErrorText, Select, Spinner, TextInput } from '../components/ui'
+
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
+
+type NotifState = 'loading' | 'unsupported' | 'off' | 'on' | 'denied'
 
 export default function Settings() {
   const t = useT()
@@ -22,10 +33,60 @@ export default function Settings() {
   const { groupId = '' } = useParams()
   const { data: group } = useGroup(groupId)
   const { data: ledger, isLoading } = useLedger(groupId)
+  const myMember = useMyMember(groupId)
   const [newCategory, setNewCategory] = useState('')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [notifState, setNotifState] = useState<NotifState>('loading')
+  const [notifBusy, setNotifBusy] = useState(false)
+  const [notifError, setNotifError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!myMember) return
+    if (!isPushSupported()) {
+      setNotifState('unsupported')
+      return
+    }
+    if (Notification.permission === 'denied') {
+      setNotifState('denied')
+      return
+    }
+    isPushEnabledForMember(myMember.id)
+      .then((enabled) => setNotifState(enabled ? 'on' : 'off'))
+      .catch(() => setNotifState('off'))
+  }, [myMember])
+
+  async function handleToggleNotifications() {
+    if (!myMember) return
+    setNotifError(null)
+    if (notifState === 'on') {
+      setNotifBusy(true)
+      try {
+        await disablePushForMember(myMember.id)
+        setNotifState('off')
+      } catch (err) {
+        setNotifError(getErrorMessage(err))
+      } finally {
+        setNotifBusy(false)
+      }
+      return
+    }
+    if (!VAPID_PUBLIC_KEY) {
+      setNotifError(t.settings.notificationsError)
+      return
+    }
+    setNotifBusy(true)
+    try {
+      await enablePushForMember(myMember.id, VAPID_PUBLIC_KEY)
+      setNotifState('on')
+    } catch {
+      setNotifState(Notification.permission === 'denied' ? 'denied' : 'off')
+      setNotifError(t.settings.notificationsError)
+    } finally {
+      setNotifBusy(false)
+    }
+  }
 
   const usedCategoryIds = new Set((ledger?.expenses ?? []).map((e) => e.category_id).filter(Boolean))
 
@@ -111,6 +172,34 @@ export default function Settings() {
             </Button>
           </form>
           <ErrorText>{error}</ErrorText>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">{t.settings.notifications}</h2>
+          <Card className="space-y-3 py-3">
+            <p className="text-sm text-slate-600 dark:text-slate-300">{t.settings.notificationsHint}</p>
+            {notifState === 'unsupported' ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500">{t.settings.notificationsUnsupported}</p>
+            ) : notifState === 'denied' ? (
+              <p className="text-xs text-red-500">{t.settings.notificationsDenied}</p>
+            ) : (
+              <Button
+                variant={notifState === 'on' ? 'secondary' : 'primary'}
+                className="w-full"
+                disabled={notifBusy || notifState === 'loading' || !myMember}
+                onClick={handleToggleNotifications}
+              >
+                {notifBusy
+                  ? notifState === 'on'
+                    ? t.settings.notificationsDisabling
+                    : t.settings.notificationsEnabling
+                  : notifState === 'on'
+                    ? t.settings.notificationsDisable
+                    : t.settings.notificationsEnable}
+              </Button>
+            )}
+            <ErrorText>{notifError}</ErrorText>
+          </Card>
         </section>
 
         <section className="space-y-2">
