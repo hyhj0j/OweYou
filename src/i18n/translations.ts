@@ -162,6 +162,9 @@ export const en = {
     notificationsUnsupported: "This browser doesn't support push notifications.",
     notificationsDenied: 'Notifications are blocked for this site — enable them in your browser settings.',
     notificationsError: "Couldn't turn on notifications. Try again.",
+    nickname: 'Nickname',
+    nicknamePlaceholder: 'Your name',
+    nicknameSaving: 'Saving…',
   },
   nav: {
     groups: 'Groups',
@@ -343,6 +346,9 @@ export type Dictionary = {
     notificationsUnsupported: string
     notificationsDenied: string
     notificationsError: string
+    nickname: string
+    nicknamePlaceholder: string
+    nicknameSaving: string
   }
   nav: {
     groups: string
@@ -523,6 +529,9 @@ export const ko: Dictionary = {
     notificationsUnsupported: '이 브라우저는 푸시 알림을 지원하지 않아요.',
     notificationsDenied: '이 사이트의 알림이 차단되어 있어요 — 브라우저 설정에서 허용해주세요.',
     notificationsError: '알림을 켜지 못했어요. 다시 시도해주세요.',
+    nickname: '닉네임',
+    nicknamePlaceholder: '이름',
+    nicknameSaving: '저장하는 중…',
   },
   nav: {
     groups: '그룹',

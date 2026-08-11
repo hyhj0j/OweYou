@@ -27,3 +27,20 @@ export async function updateProfileDisplayName(userId: string, displayName: stri
   if (error) throw error
   return data as Profile
 }
+
+// Changes the account's nickname everywhere at once: the profiles row (what
+// autofills into new groups) and every group_members row this account
+// already owns (what current groupmates actually see) -- otherwise a
+// "nickname change" would silently only apply to future groups, and
+// existing groupmates would keep seeing the old name. Both writes are
+// allowed by existing RLS ("profiles: self can update" / "group_members:
+// self can update display name"), so no RPC is needed.
+export async function updateMyDisplayName(userId: string, displayName: string): Promise<Profile> {
+  const trimmed = displayName.trim()
+  const profile = await updateProfileDisplayName(userId, trimmed)
+
+  const { error } = await supabase.from('group_members').update({ display_name: trimmed }).eq('user_id', userId)
+  if (error) throw error
+
+  return profile
+}

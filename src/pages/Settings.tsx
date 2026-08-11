@@ -6,8 +6,10 @@ import { useAuth } from '../hooks/useAuth'
 import { useGroup } from '../hooks/useGroup'
 import { useLedger } from '../hooks/useLedger'
 import { useMyMember } from '../hooks/useMyMember'
+import { useProfile } from '../hooks/useProfile'
 import { categoryLabel, createCategory, deleteCategory } from '../lib/categories'
 import { deleteGroup } from '../lib/groups'
+import { updateMyDisplayName } from '../lib/profile'
 import { getErrorMessage } from '../lib/errors'
 import {
   disablePushForMember,
@@ -34,6 +36,11 @@ export default function Settings() {
   const { data: group } = useGroup(groupId)
   const { data: ledger, isLoading } = useLedger(groupId)
   const myMember = useMyMember(groupId)
+  const { data: profile } = useProfile()
+  const [nickname, setNickname] = useState('')
+  const [nicknameInitialized, setNicknameInitialized] = useState(false)
+  const [savingNickname, setSavingNickname] = useState(false)
+  const [nicknameError, setNicknameError] = useState<string | null>(null)
   const [newCategory, setNewCategory] = useState('')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -88,6 +95,33 @@ export default function Settings() {
     }
   }
 
+  useEffect(() => {
+    if (nicknameInitialized || !profile) return
+    setNickname(profile.display_name)
+    setNicknameInitialized(true)
+  }, [nicknameInitialized, profile])
+
+  async function handleSaveNickname(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = nickname.trim()
+    if (!trimmed || !userId) return
+    setSavingNickname(true)
+    setNicknameError(null)
+    try {
+      await updateMyDisplayName(userId, trimmed)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['profile', userId] }),
+        queryClient.invalidateQueries({ queryKey: ['ledger', groupId] }),
+        queryClient.invalidateQueries({ queryKey: ['group-members', groupId] }),
+        queryClient.invalidateQueries({ queryKey: ['my-groups', userId] }),
+      ])
+    } catch (err) {
+      setNicknameError(getErrorMessage(err))
+    } finally {
+      setSavingNickname(false)
+    }
+  }
+
   const usedCategoryIds = new Set((ledger?.expenses ?? []).map((e) => e.category_id).filter(Boolean))
 
   async function handleAddCategory(e: React.FormEvent) {
@@ -132,6 +166,26 @@ export default function Settings() {
             <option value="en">English</option>
             <option value="ko">한국어</option>
           </Select>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">{t.settings.nickname}</h2>
+          <form onSubmit={handleSaveNickname} className="flex gap-2">
+            <TextInput
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder={t.settings.nicknamePlaceholder}
+              className="flex-1"
+            />
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={savingNickname || !nickname.trim() || nickname.trim() === profile?.display_name}
+            >
+              {savingNickname ? t.settings.nicknameSaving : t.common.save}
+            </Button>
+          </form>
+          <ErrorText>{nicknameError}</ErrorText>
         </section>
 
         <section className="space-y-2">
